@@ -227,9 +227,9 @@ Verificar en: `https://github.com/Jorgeaapaz/gh-aws/settings/secrets/actions`
 
 ## Tareas pendientes / Pending Tasks
 
+- [ ] Actualizar `actions/checkout` y `actions/setup-node` a versiones con soporte Node 24 antes del 2-jun-2026
 - [x] Ejecutar `scripts/setup-ec2.sh` en `ubuntu@3.235.47.30`
 - [x] Verificar que la GitHub Action despliega correctamente (✅ run #25070841622, 27s)
-- [ ] Actualizar `actions/checkout` y `actions/setup-node` a versiones con soporte Node 24 antes del 2-jun-2026
 - [ ] (Opcional) Configurar nginx como reverse proxy en EC2 para acceso por puerto 80
 - [ ] (Opcional) Añadir dominio personalizado y certificado SSL (Let's Encrypt / Certbot)
 
