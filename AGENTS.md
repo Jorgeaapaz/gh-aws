@@ -43,7 +43,7 @@ Push to: `Jorgeaapaz/gh-aws`
 ## Tasks
 
 - [x] Build landing page (professional AI training promotion)
-- [ ] Push repo to `Jorgeaapaz/gh-aws`
-- [ ] Configure GitHub Actions workflow (build + deploy)
-- [ ] Create systemd service on EC2
-- [ ] Set GitHub repository secrets
+- [x] Push repo to `Jorgeaapaz/gh-aws`
+- [x] Configure GitHub Actions workflow (build + deploy)
+- [ ] Run `scripts/setup-ec2.sh` on the EC2 instance (one-time bootstrap)
+- [x] Set GitHub repository secrets (`EC2_SSH_KEY`, `EC2_HOST`, `EC2_USER`)
