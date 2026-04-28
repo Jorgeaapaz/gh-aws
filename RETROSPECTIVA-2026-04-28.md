@@ -14,7 +14,7 @@ Se partió de un proyecto `create-next-app` vacío. Se refinó el archivo `AGENT
 - Script de bootstrap para la instancia EC2
 - Repositorio publicado en GitHub con los tres secrets necesarios
 
-**Estado al cierre de sesión:** código en producción en GitHub (`Jorgeaapaz/gh-aws`), pipeline configurado. **Pendiente:** ejecutar `setup-ec2.sh` en la instancia para arrancar el servicio por primera vez.
+**Estado al cierre de sesión:** pipeline completamente operativo. Bootstrap EC2 ejecutado con éxito, primera Action verde en 27s, aplicación en producción en `http://3.235.47.30:3000`.
 
 ---
 
@@ -41,7 +41,7 @@ Se partió de un proyecto `create-next-app` vacío. Se refinó el archivo `AGENT
 | `app/layout.tsx` | Modificado | Fuentes Unbounded + Plus Jakarta Sans, metadata en español |
 | `app/page.tsx` | Modificado | Landing page completa (8 secciones, `"use client"`) |
 | `next.config.ts` | Modificado | Añadido `output: "standalone"` |
-| `.github/workflows/deploy.yml` | Creado | Pipeline build → rsync → restart |
+| `.github/workflows/deploy.yml` | Creado | Pipeline build → rsync → restart + `workflow_dispatch` |
 | `scripts/setup-ec2.sh` | Creado | Bootstrap EC2: Node 20 + systemd service |
 
 ---
@@ -112,7 +112,7 @@ push a main
        └─ ssh → sudo systemctl restart gh-aws
 ```
 
-### Bootstrap EC2 (una sola vez — AÚN PENDIENTE)
+### Bootstrap EC2 (una sola vez — ✅ COMPLETADO 2026-04-28)
 
 ```bash
 ssh -i C:/ubuntuiso/.ssh/vboxuser ubuntu@3.235.47.30
@@ -219,13 +219,17 @@ Verificar en: `https://github.com/Jorgeaapaz/gh-aws/settings/secrets/actions`
 |---|---|
 | `gh repo create --push` falló porque el remote `origin` ya había sido añadido manualmente | El repo sí se creó en GitHub; se ejecutó `git push -u origin main` por separado |
 | Next.js 16.2.4 usa APIs distintas a versiones anteriores | Se consultaron los docs en `node_modules/next/dist/docs/` antes de escribir código |
+| Las 3 primeras Actions fallaron con `rsync: mkdir "/var/www/gh-aws" failed: Permission denied (13)` | El directorio no existía aún porque el bootstrap EC2 se hizo después de los primeros pushes. Solución: ejecutar `setup-ec2.sh` primero (crea el dir con `chown ubuntu:ubuntu`), luego re-disparar la Action |
+| El workflow no tenía `workflow_dispatch`, imposible re-dispararlo manualmente vía `gh workflow run` | Se añadió el trigger `workflow_dispatch` al YAML y se hizo push — la Action siguiente fue verde en 27s |
+| Warning en runner: _"Node.js 20 actions are deprecated"_ (actions/checkout@v4, actions/setup-node@v4) | Cosmético por ahora. Antes del **2 de junio de 2026** actualizar a versiones con soporte Node 24, o añadir `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` al workflow |
 
 ---
 
 ## Tareas pendientes / Pending Tasks
 
-- [ ] Ejecutar `scripts/setup-ec2.sh` en `ubuntu@3.235.47.30` (bootstrap inicial del servicio)
-- [ ] Verificar que el primer push dispara la GitHub Action correctamente
+- [x] Ejecutar `scripts/setup-ec2.sh` en `ubuntu@3.235.47.30`
+- [x] Verificar que la GitHub Action despliega correctamente (✅ run #25070841622, 27s)
+- [ ] Actualizar `actions/checkout` y `actions/setup-node` a versiones con soporte Node 24 antes del 2-jun-2026
 - [ ] (Opcional) Configurar nginx como reverse proxy en EC2 para acceso por puerto 80
 - [ ] (Opcional) Añadir dominio personalizado y certificado SSL (Let's Encrypt / Certbot)
 
@@ -233,7 +237,9 @@ Verificar en: `https://github.com/Jorgeaapaz/gh-aws/settings/secrets/actions`
 
 ## Resultados y conclusiones / Results & Conclusions
 
-- Pipeline completo implementado en una sola sesión: desde scaffolding hasta CI/CD funcional.
-- El uso de `output: standalone` en Next.js minimiza lo que se transfiere a EC2 (no se necesita `npm install` en el servidor).
+- Pipeline completo implementado y verificado en una sola sesión: desde scaffolding hasta primera Action verde en producción.
+- **Lección clave:** el bootstrap EC2 (`setup-ec2.sh`) debe ejecutarse **antes** del primer push a `main`; de lo contrario rsync falla porque `/var/www/gh-aws` no existe todavía.
+- El uso de `output: standalone` en Next.js elimina `npm install` en el servidor — solo se transfiere el bundle mínimo vía rsync.
+- Añadir `workflow_dispatch` al workflow desde el inicio evita tener que hacer pushes vacíos para re-disparar manualmente.
 - El diseño "Neural Dark" es completamente auto-contenido en `app/page.tsx` — sin dependencias de UI externas.
-- El único paso manual restante es el bootstrap de EC2, que queda documentado y es reproducible con un solo comando.
+- Aplicación accesible en producción: `http://3.235.47.30:3000`
